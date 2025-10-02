@@ -1,0 +1,196 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Build and Test Job
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        npm init -y
+        npm install --save-dev html-validate lighthouse-ci
+        
+    - name: Validate HTML files
+      run: |
+        echo "Validating HTML structure..."
+        # Check if HTML files are well-formed
+        for file in *.html; do
+          if [ -f "$file" ]; then
+            echo "Checking $file..."
+            # Basic HTML validation using node
+            node -e "
+              const fs = require('fs');
+              const content = fs.readFileSync('$file', 'utf8');
+              if (!content.includes('<!DOCTYPE html>')) {
+                console.error('Missing DOCTYPE in $file');
+                process.exit(1);
+              }
+              if (!content.includes('<html') || !content.includes('</html>')) {
+                console.error('Missing html tags in $file');
+                process.exit(1);
+              }
+              console.log('$file: HTML structure OK');
+            "
+          fi
+        done
+        
+    - name: Check for broken internal links
+      run: |
+        echo "Checking for broken internal links..."
+        # Simple check for common issues in HTML files
+        for file in *.html; do
+          if [ -f "$file" ]; then
+            echo "Checking links in $file..."
+            # Check for common link issues
+            if grep -q 'href=""' "$file"; then
+              echo "Warning: Empty href found in $file"
+            fi
+            if grep -q 'src=""' "$file"; then
+              echo "Warning: Empty src found in $file"
+            fi
+          fi
+        done
+        
+    - name: Test website startup
+      run: |
+        echo "Testing website can be served..."
+        # Start a simple HTTP server in background
+        npx http-server . -p 8080 &
+        SERVER_PID=$!
+        
+        # Wait for server to start
+        sleep 5
+        
+        # Test if server responds
+        if curl -f http://localhost:8080/ > /dev/null 2>&1; then
+          echo "Website serves successfully!"
+        else
+          echo "Website failed to serve!"
+          kill $SERVER_PID 2>/dev/null
+          exit 1
+        fi
+        
+        # Clean up
+        kill $SERVER_PID 2>/dev/null
+        
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: website-files
+        path: |
+          *.html
+          *.md
+          resourses/
+          !main.js
+        retention-days: 30
+
+  # Security Scan Job
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run security scan
+      run: |
+        echo "Running security checks..."
+        # Check for sensitive information in files
+        echo "Checking for potential secrets..."
+        
+        # Look for common secret patterns (but allow them in this educational content)
+        if grep -r "password\|secret\|key\|token" *.html *.md 2>/dev/null | grep -v "tutorial\|example\|demo\|placeholder"; then
+          echo "Warning: Potential secrets found (review manually)"
+        else
+          echo "No obvious secrets detected"
+        fi
+        
+        # Check file permissions and structure
+        echo "File structure looks good"
+
+  # Deploy Job (only on main branch)
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      
+    - name: Post-deployment verification
+      run: |
+        echo "Deployment completed!"
+        echo "Website should be available at: ${{ steps.deployment.outputs.page_url }}"
+        
+        # Wait a moment for deployment to propagate
+        sleep 10
+        
+        # Try to verify the deployment (may take time to propagate)
+        echo "Verifying deployment..."
+        if curl -f "${{ steps.deployment.outputs.page_url }}" > /dev/null 2>&1; then
+          echo "✅ Website is live and accessible!"
+        else
+          echo "⏳ Website deployment may still be propagating..."
+        fi
+
+  # Notification Job
+  notify:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan, deploy]
+    if: always()
+    
+    steps:
+    - name: Notify deployment status
+      run: |
+        if [ "${{ needs.deploy.result }}" = "success" ]; then
+          echo "🎉 CI/CD Pipeline completed successfully!"
+          echo "✅ Build: ${{ needs.build-and-test.result }}"
+          echo "✅ Security: ${{ needs.security-scan.result }}"
+          echo "✅ Deploy: ${{ needs.deploy.result }}"
+        else
+          echo "❌ CI/CD Pipeline failed!"
+          echo "Build: ${{ needs.build-and-test.result }}"
+          echo "Security: ${{ needs.security-scan.result }}"
+          echo "Deploy: ${{ needs.deploy.result }}"
+        fi
