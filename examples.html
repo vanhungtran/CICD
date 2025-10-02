@@ -1,0 +1,2104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitLab CI/CD Examples - Real-World Scenarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #1e293b;
+            --secondary-bg: #374151;
+            --accent-cyan: #06b6d4;
+            --accent-mint: #10b981;
+            --accent-amber: #f59e0b;
+            --text-primary: #ffffff;
+            --text-secondary: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .nav-glass {
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(6, 182, 212, 0.2);
+        }
+        
+        .example-card {
+            background: rgba(55, 65, 81, 0.8);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .example-card:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.2);
+            transform: translateY(-4px);
+        }
+        
+        .example-card.active {
+            border-color: var(--accent-mint);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+        
+        .filter-btn {
+            background: transparent;
+            border: 2px solid var(--secondary-bg);
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn.active {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            color: white;
+        }
+        
+        .filter-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+        
+        .code-editor {
+            background: #0f172a;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .syntax-keyword { color: #c678dd; }
+        .syntax-string { color: #98c379; }
+        .syntax-comment { color: #5c6370; font-style: italic; }
+        .syntax-number { color: #d19a66; }
+        
+        .performance-chart {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 8px;
+        }
+        
+        .metric-card {
+            background: rgba(55, 65, 81, 0.6);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-mint);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-mint));
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--accent-cyan);
+            padding: 10px 22px;
+            border-radius: 8px;
+            color: var(--accent-cyan);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--accent-cyan);
+            color: white;
+        }
+        
+        .difficulty-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .difficulty-easy {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-mint);
+            border: 1px solid var(--accent-mint);
+        }
+        
+        .difficulty-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-amber);
+            border: 1px solid var(--accent-amber);
+        }
+        
+        .difficulty-hard {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav-glass fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="font-mono text-xl font-bold text-cyan-400">GitLab CI/CD</a>
+                    <div class="ml-2 text-sm text-gray-400">Examples</div>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="index.html" class="text-gray-300 hover:text-cyan-400 transition-colors">Builder</a>
+                    <a href="tutorial.html" class="text-gray-300 hover:text-cyan-400 transition-colors">Tutorial</a>
+                    <a href="examples.html" class="text-cyan-400">Examples</a>
+                    <a href="docs.html" class="text-gray-300 hover:text-cyan-400 transition-colors">Docs</a>
+                </div>
+                <button class="btn-primary" onclick="scrollToSection('examples')">Browse Examples</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-24 pb-12 px-4">
+        <div class="max-w-6xl mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-mono font-bold mb-6">
+                <span class="bg-gradient-to-r from-cyan-400 to-mint-400 bg-clip-text text-transparent">
+                    Real-World Examples
+                </span>
+            </h1>
+            <p class="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                Explore production-ready GitLab CI/CD configurations from leading companies. 
+                Learn from practical implementations and adapt them to your projects.
+            </p>
+            <div class="flex justify-center items-center space-x-6 text-sm text-gray-400">
+                <span>🏢 25+ Enterprise Examples</span>
+                <span>🚀 Multiple Tech Stacks</span>
+                <span>📊 Performance Insights</span>
+                <span>🔧 Production Ready</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filter Section -->
+    <section id="examples" class="py-8 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex flex-wrap justify-center gap-4 mb-8">
+                <button class="filter-btn active" data-filter="all">All Examples</button>
+                <button class="filter-btn" data-filter="web">Web Applications</button>
+                <button class="filter-btn" data-filter="api">APIs & Microservices</button>
+                <button class="filter-btn" data-filter="mobile">Mobile Apps</button>
+                <button class="filter-btn" data-filter="ml">Machine Learning</button>
+                <button class="filter-btn" data-filter="devops">DevOps Tools</button>
+                <button class="filter-btn" data-filter="security">Security</button>
+                <button class="filter-btn" data-filter="database">Database</button>
+                <button class="filter-btn" data-filter="monitoring">Monitoring</button>
+            </div>
+            
+            <!-- Examples Statistics -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-slate-800 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-cyan-400">25+</div>
+                    <div class="text-sm text-gray-400">Production Examples</div>
+                </div>
+                <div class="bg-slate-800 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-mint-400">12</div>
+                    <div class="text-sm text-gray-400">Tech Categories</div>
+                </div>
+                <div class="bg-slate-800 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-amber-400">95%</div>
+                    <div class="text-sm text-gray-400">Success Rate</div>
+                </div>
+                <div class="bg-slate-800 rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-purple-400">50k+</div>
+                    <div class="text-sm text-gray-400">Deployments</div>
+                </div>
+            </div>
+
+            <!-- Examples Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                <!-- Node.js Web Application -->
+                <div class="example-card p-6" data-category="web" data-example="nodejs">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">N</span>
+                        </div>
+                        <span class="difficulty-badge difficulty-easy">Beginner</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-cyan-400">Node.js Web App</h3>
+                    <p class="text-gray-300 text-sm mb-4">
+                        Complete CI/CD pipeline for Node.js web application with testing, Docker build, and deployment to production.
+                    </p>
+                    <div class="flex justify-between items-center text-xs text-gray-400 mb-4">
+                        <span>⏱️ 15 min setup</span>
+                        <span>📈 95% success rate</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Node.js</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Docker</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Jest</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">AWS</span>
+                    </div>
+                </div>
+
+                <!-- Python Django API -->
+                <div class="example-card p-6" data-category="api" data-example="django">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">D</span>
+                        </div>
+                        <span class="difficulty-badge difficulty-medium">Intermediate</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-cyan-400">Django REST API</h3>
+                    <p class="text-gray-300 text-sm mb-4">
+                        Production-ready Django API pipeline with database migrations, testing, security scanning, and Kubernetes deployment.
+                    </p>
+                    <div class="flex justify-between items-center text-xs text-gray-400 mb-4">
+                        <span>⏱️ 25 min setup</span>
+                        <span>📈 92% success rate</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Python</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Django</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">PostgreSQL</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">K8s</span>
+                    </div>
+                </div>
+
+                <!-- React Mobile App -->
+                <div class="example-card p-6" data-category="mobile" data-example="react-native">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-cyan-500 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">R</span>
+                        </div>
+                        <span class="difficulty-badge difficulty-hard">Advanced</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-cyan-400">React Native App</h3>
+                    <p class="text-gray-300 text-sm mb-4">
+                        Cross-platform mobile app pipeline with automated testing, code signing, and app store deployment.
+                    </p>
+                    <div class="flex justify-between items-center text-xs text-gray-400 mb-4">
+                        <span>⏱️ 35 min setup</span>
+                        <span>📈 88% success rate</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">React Native</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">iOS</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Android</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Fastlane</span>
+                    </div>
+                </div>
+
+                <!-- Machine Learning Pipeline -->
+                <div class="example-card p-6" data-category="ml" data-example="ml-pipeline">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">ML</span>
+                        </div>
+                        <span class="difficulty-badge difficulty-hard">Advanced</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-cyan-400">ML Model Training Pipeline</h3>
+                    <p class="text-gray-300 text-sm mb-4">
+                        Complete MLOps pipeline with data validation, automated model training, hyperparameter tuning, 
+                        model registry, and A/B deployment. Includes data drift detection and performance monitoring.
+                    </p>
+                    <div class="flex justify-between items-center text-xs text-gray-400 mb-4">
+                        <span>⏱️ 45 min setup</span>
+                        <span>📈 85% success rate</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Python</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">TensorFlow</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">MLflow</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Kubeflow</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">GCP</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Airflow</span>
+                    </div>
+                </div>
+
+                <!-- Infrastructure as Code -->
+                <div class="example-card p-6" data-category="devops" data-example="terraform">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">T</span>
+                        </div>
+                        <span class="difficulty-badge difficulty-medium">Intermediate</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-cyan-400">Terraform Infrastructure</h3>
+                    <p class="text-gray-300 text-sm mb-4">
+                        Infrastructure as Code pipeline with Terraform, automated validation, cost estimation, and multi-environment deployment.
+                    </p>
+                    <div class="flex justify-between items-center text-xs text-gray-400 mb-4">
+                        <span>⏱️ 30 min setup</span>
+                        <span>📈 90% success rate</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Terraform</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">AWS</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Ansible</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Vault</span>
+                    </div>
+                </div>
+
+                <!-- Security Scanning Pipeline -->
+                <div class="example-card p-6" data-category="security" data-example="security">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">🔒</span>
+                        </div>
+                        <span class="difficulty-badge difficulty-medium">Intermediate</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-cyan-400">Security-First Pipeline</h3>
+                    <p class="text-gray-300 text-sm mb-4">
+                        Comprehensive security pipeline with SAST, DAST, dependency scanning, and compliance checks.
+                    </p>
+                    <div class="flex justify-between items-center text-xs text-gray-400 mb-4">
+                        <span>⏱️ 20 min setup</span>
+                        <span>📈 93% success rate</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">SAST</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">DAST</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Snyk</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">OWASP</span>
+                    </div>
+                </div>
+
+                <!-- Database Migration Pipeline -->
+                <div class="example-card p-6" data-category="database" data-example="database">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">🗄️</span>
+                        </div>
+                        <span class="difficulty-badge difficulty-medium">Intermediate</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-cyan-400">Database Migration Pipeline</h3>
+                    <p class="text-gray-300 text-sm mb-4">
+                        Automated database schema migrations with rollback capabilities, validation testing, and multi-environment deployment.
+                    </p>
+                    <div class="flex justify-between items-center text-xs text-gray-400 mb-4">
+                        <span>⏱️ 25 min setup</span>
+                        <span>📈 91% success rate</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">PostgreSQL</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Flyway</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Liquibase</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Redis</span>
+                    </div>
+                </div>
+
+                <!-- Monitoring & Observability Pipeline -->
+                <div class="example-card p-6" data-category="monitoring" data-example="monitoring">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-indigo-500 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">📊</span>
+                        </div>
+                        <span class="difficulty-badge difficulty-hard">Advanced</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-cyan-400">Monitoring & Observability</h3>
+                    <p class="text-gray-300 text-sm mb-4">
+                        Complete observability stack with metrics collection, log aggregation, alerting, and dashboard deployment.
+                    </p>
+                    <div class="flex justify-between items-center text-xs text-gray-400 mb-4">
+                        <span>⏱️ 40 min setup</span>
+                        <span>📈 87% success rate</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Prometheus</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Grafana</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">ELK Stack</span>
+                        <span class="px-2 py-1 bg-slate-700 rounded text-xs">Jaeger</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detailed Example View -->
+    <section id="example-detail" class="py-12 px-4 hidden">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Configuration Details -->
+                <div class="lg:col-span-2">
+                    <div class="bg-slate-800 rounded-lg p-6 mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-mono font-bold text-cyan-400" id="example-title">Node.js Web Application</h2>
+                            <button class="btn-secondary" onclick="closeExample()">← Back to Examples</button>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-3 text-mint-400">Pipeline Overview</h3>
+                            <p class="text-gray-300 mb-4" id="example-description">
+                                Complete CI/CD pipeline for Node.js web application with comprehensive testing, 
+                                Docker containerization, and automated deployment to cloud platforms.
+                            </p>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                <div class="metric-card">
+                                    <div class="metric-value" id="build-time">3.2m</div>
+                                    <div class="text-sm text-gray-400">Avg Build Time</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-value" id="success-rate">95%</div>
+                                    <div class="text-sm text-gray-400">Success Rate</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-value" id="parallel-jobs">8</div>
+                                    <div class="text-sm text-gray-400">Parallel Jobs</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-value" id="deploy-freq">47/day</div>
+                                    <div class="text-sm text-gray-400">Deployments</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-3 text-amber-400">Complete Configuration</h3>
+                            <div class="code-editor p-4">
+                                <pre id="example-code" class="text-sm overflow-x-auto"><span class="syntax-comment"># Complete Node.js CI/CD Pipeline</span>
+<span class="syntax-keyword">stages</span>:
+  - install
+  - test
+  - build
+  - security
+  - deploy
+
+<span class="syntax-keyword">variables</span>:
+  NODE_VERSION: "18"
+  DOCKER_REGISTRY: "registry.gitlab.com"
+  IMAGE_NAME: "$DOCKER_REGISTRY/$CI_PROJECT_PATH"
+
+<span class="syntax-comment"># Cache node_modules for faster builds</span>
+<span class="syntax-keyword">cache</span>:
+  paths:
+    - node_modules/
+  key: "$CI_COMMIT_REF_NAME"
+
+<span class="syntax-comment"># Install dependencies</span>
+install:
+  stage: install
+  image: node:$NODE_VERSION
+  script:
+    - npm ci --cache .npm --prefer-offline
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1 hour
+
+<span class="syntax-comment"># Run tests with coverage</span>
+test:
+  stage: test
+  image: node:$NODE_VERSION
+  script:
+    - npm run test:ci
+    - npm run test:coverage
+  coverage: '/Lines\\s*\\:\\s*(\\d+\\.\\d+%)/'
+  artifacts:
+    reports:
+      junit: test-results.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    paths:
+      - coverage/
+    expire_in: 1 week
+
+<span class="syntax-comment"># Build Docker image</span>
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHA .
+    - docker push $IMAGE_NAME:$CI_COMMIT_SHA
+    - docker tag $IMAGE_NAME:$CI_COMMIT_SHA $IMAGE_NAME:latest
+    - docker push $IMAGE_NAME:latest
+  dependencies:
+    - install
+
+<span class="syntax-comment"># Security scanning</span>
+security:
+  stage: security
+  image: node:$NODE_VERSION
+  script:
+    - npm audit --audit-level moderate
+    - npx audit-ci --config ./audit-ci.json
+  allow_failure: true
+
+<span class="syntax-comment"># Deploy to production</span>
+deploy-production:
+  stage: deploy
+  image: alpine/helm:latest
+  script:
+    - echo "Deploying to production"
+    - helm upgrade --install my-app ./chart
+      --set image.repository=$IMAGE_NAME
+      --set image.tag=$CI_COMMIT_SHA
+      --set environment=production
+      --wait
+  environment:
+    name: production
+    url: https://my-app.example.com
+  only:
+    - main
+  when: manual</pre>
+                            </div>
+                            <div class="mt-4 space-x-2">
+                                <button class="btn-primary" onclick="copyExampleCode()">Copy Configuration</button>
+                                <button class="btn-secondary" onclick="simulateExample()">Simulate Pipeline</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pipeline Visualization & Performance -->
+                <div class="lg:col-span-1">
+                    <div class="bg-slate-800 rounded-lg p-6 mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-cyan-400">Pipeline Flow</h3>
+                        <div id="pipeline-visualization" class="space-y-3">
+                            <div class="flex items-center p-3 bg-slate-700 rounded">
+                                <div class="w-3 h-3 bg-cyan-400 rounded-full mr-3"></div>
+                                <span class="text-sm">install</span>
+                                <span class="ml-auto text-xs text-gray-400">45s</span>
+                            </div>
+                            <div class="flex items-center p-3 bg-slate-700 rounded">
+                                <div class="w-3 h-3 bg-mint-400 rounded-full mr-3"></div>
+                                <span class="text-sm">test</span>
+                                <span class="ml-auto text-xs text-gray-400">2m 15s</span>
+                            </div>
+                            <div class="flex items-center p-3 bg-slate-700 rounded">
+                                <div class="w-3 h-3 bg-amber-400 rounded-full mr-3"></div>
+                                <span class="text-sm">build</span>
+                                <span class="ml-auto text-xs text-gray-400">1m 30s</span>
+                            </div>
+                            <div class="flex items-center p-3 bg-slate-700 rounded">
+                                <div class="w-3 h-3 bg-purple-400 rounded-full mr-3"></div>
+                                <span class="text-sm">security</span>
+                                <span class="ml-auto text-xs text-gray-400">30s</span>
+                            </div>
+                            <div class="flex items-center p-3 bg-slate-700 rounded">
+                                <div class="w-3 h-3 bg-red-400 rounded-full mr-3"></div>
+                                <span class="text-sm">deploy</span>
+                                <span class="ml-auto text-xs text-gray-400">2m 45s</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800 rounded-lg p-6 mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-mint-400">Performance Metrics</h3>
+                        <div id="performance-chart" class="performance-chart h-48"></div>
+                    </div>
+
+                    <div class="bg-slate-800 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold mb-4 text-amber-400">Key Features</h3>
+                        <ul class="space-y-2 text-sm text-gray-300">
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full mr-3"></span>
+                                Automated dependency caching
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-mint-400 rounded-full mr-3"></span>
+                                Test coverage reporting
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-amber-400 rounded-full mr-3"></span>
+                                Multi-stage Docker builds
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-purple-400 rounded-full mr-3"></span>
+                                Security vulnerability scanning
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-red-400 rounded-full mr-3"></span>
+                                Manual production deployment
+                            </li>
+                            <li class="flex items-center">
+                                <span class="w-2 h-2 bg-indigo-400 rounded-full mr-3"></span>
+                                Helm chart deployment
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-8 px-4 border-t border-slate-700">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="font-mono text-lg font-bold text-cyan-400 mb-2">GitLab CI/CD Masterclass</div>
+            <p class="text-gray-400 text-sm">
+                © 2025 GitLab CI/CD Tutorial. Educational content for learning modern DevOps practices.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Example data and functionality
+        const examples = {
+            nodejs: {
+                title: 'Node.js Web Application',
+                description: 'Complete CI/CD pipeline for Node.js web application with comprehensive testing, Docker containerization, and automated deployment to cloud platforms.',
+                buildTime: '3.2m',
+                successRate: '95%',
+                parallelJobs: '8',
+                deployFreq: '47/day',
+                code: `# Complete Node.js CI/CD Pipeline
+stages:
+  - install
+  - test
+  - build
+  - security
+  - deploy
+
+variables:
+  NODE_VERSION: "18"
+  DOCKER_REGISTRY: "registry.gitlab.com"
+  IMAGE_NAME: "$DOCKER_REGISTRY/$CI_PROJECT_PATH"
+
+cache:
+  paths:
+    - node_modules/
+  key: "$CI_COMMIT_REF_NAME"
+
+install:
+  stage: install
+  image: node:$NODE_VERSION
+  script:
+    - npm ci --cache .npm --prefer-offline
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1 hour
+
+test:
+  stage: test
+  image: node:$NODE_VERSION
+  script:
+    - npm run test:ci
+    - npm run test:coverage
+  coverage: '/Lines\\s*\\:\\s*(\\d+\\.\\d+%)/'
+  artifacts:
+    reports:
+      junit: test-results.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHA .
+    - docker push $IMAGE_NAME:$CI_COMMIT_SHA
+  dependencies:
+    - install
+
+security:
+  stage: security
+  image: node:$NODE_VERSION
+  script:
+    - npm audit --audit-level moderate
+  allow_failure: true
+
+deploy-production:
+  stage: deploy
+  image: alpine/helm:latest
+  script:
+    - helm upgrade --install my-app ./chart
+      --set image.repository=$IMAGE_NAME
+      --set image.tag=$CI_COMMIT_SHA
+      --wait
+  environment:
+    name: production
+    url: https://my-app.example.com
+  only:
+    - main
+  when: manual`
+            },
+            django: {
+                title: 'Django REST API',
+                description: 'Production-ready Django API pipeline with database migrations, comprehensive testing, security scanning, and Kubernetes deployment.',
+                buildTime: '4.1m',
+                successRate: '92%',
+                parallelJobs: '12',
+                deployFreq: '23/day',
+                code: `# Django REST API CI/CD Pipeline
+stages:
+  - setup
+  - test
+  - security
+  - build
+  - deploy
+
+variables:
+  PYTHON_VERSION: "3.9"
+  POSTGRES_DB: "test_db"
+  POSTGRES_USER: "test_user"
+  POSTGRES_PASSWORD: "test_pass"
+  DOCKER_REGISTRY: "registry.gitlab.com"
+  IMAGE_NAME: "$DOCKER_REGISTRY/$CI_PROJECT_PATH"
+
+services:
+  - postgres:13
+
+setup:
+  stage: setup
+  image: python:$PYTHON_VERSION
+  script:
+    - pip install -r requirements.txt
+    - python manage.py migrate
+    - python manage.py collectstatic --noinput
+  artifacts:
+    paths:
+      - static/
+    expire_in: 1 hour
+
+test:
+  stage: test
+  image: python:$PYTHON_VERSION
+  script:
+    - pip install -r requirements.txt
+    - pip install pytest pytest-cov pytest-django
+    - pytest --cov=myapp --cov-report=xml
+    - coverage report -m
+  coverage: '/TOTAL.*\\s+(\\d+%)/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+      junit: test-results.xml
+
+security:
+  stage: security
+  image: python:$PYTHON_VERSION
+  script:
+    - pip install bandit safety
+    - bandit -r myapp/
+    - safety check
+  allow_failure: true
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHA .
+    - docker push $IMAGE_NAME:$CI_COMMIT_SHA
+
+deploy:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - kubectl set image deployment/myapp-deployment myapp=$IMAGE_NAME:$CI_COMMIT_SHA
+    - kubectl rollout status deployment/myapp-deployment
+  environment:
+    name: production
+  only:
+    - main
+  when: manual`
+            },
+            'ml-pipeline': {
+                title: 'ML Model Training Pipeline',
+                description: 'Complete MLOps pipeline with data validation, automated model training, hyperparameter tuning, model registry, and A/B deployment. Includes data drift detection and performance monitoring.',
+                buildTime: '12.5m',
+                successRate: '85%',
+                parallelJobs: '16',
+                deployFreq: '8/day',
+                code: `# MLOps Pipeline with MLflow and Kubeflow
+stages:
+  - data-validation
+  - preprocess
+  - train
+  - evaluate
+  - register
+  - deploy
+  - monitor
+
+variables:
+  PYTHON_VERSION: "3.9"
+  MLFLOW_TRACKING_URI: "http://mlflow-server:5000"
+  MODEL_NAME: "customer-churn-predictor"
+  DATA_PATH: "./data"
+  EXPERIMENT_NAME: "churn-prediction"
+
+# Data validation and preprocessing
+data-validation:
+  stage: data-validation
+  image: python:$PYTHON_VERSION
+  script:
+    - pip install -r requirements.txt
+    - python scripts/data_validation.py
+      --data-path $DATA_PATH/raw/churn_data.csv
+      --schema-path schemas/data_schema.json
+      --output-path $DATA_PATH/validated/
+  artifacts:
+    paths:
+      - $DATA_PATH/validated/
+      - validation_reports/
+    expire_in: 1 week
+  only:
+    - main
+    - develop
+
+# Data preprocessing and feature engineering
+preprocess:
+  stage: preprocess
+  image: python:$PYTHON_VERSION
+  script:
+    - pip install -r requirements.txt
+    - python scripts/preprocess.py
+      --input-path $DATA_PATH/validated/churn_data.csv
+      --output-path $DATA_PATH/processed/
+      --config configs/preprocessing.yaml
+    - python scripts/feature_engineering.py
+      --data-path $DATA_PATH/processed/churn_data.csv
+      --output-path $DATA_PATH/features/
+  artifacts:
+    paths:
+      - $DATA_PATH/processed/
+      - $DATA_PATH/features/
+      - feature_metadata.json
+    expire_in: 1 week
+  dependencies:
+    - data-validation
+
+# Model training with hyperparameter tuning
+train:
+  stage: train
+  image: tensorflow/tensorflow:latest-gpu
+  script:
+    - pip install -r requirements.txt
+    - python scripts/train.py
+      --data-path $DATA_PATH/features/churn_features.csv
+      --config configs/training.yaml
+      --experiment-name $EXPERIMENT_NAME
+      --model-output models/
+      --mlflow-uri $MLFLOW_TRACKING_URI
+    - python scripts/hyperparameter_tuning.py
+      --model-path models/baseline_model.pkl
+      --config configs/hyperparams.yaml
+      --trials 50
+      --output-path models/tuned/
+  artifacts:
+    paths:
+      - models/
+      - training_logs/
+      - hyperparameter_results/
+    expire_in: 2 weeks
+  dependencies:
+    - preprocess
+  parallel: 3
+
+# Model evaluation and validation
+evaluate:
+  stage: evaluate
+  image: python:$PYTHON_VERSION
+  script:
+    - pip install -r requirements.txt
+    - python scripts/evaluate.py
+      --model-path models/tuned/best_model.pkl
+      --test-path $DATA_PATH/features/test_data.csv
+      --output-path evaluation_results/
+      --mlflow-uri $MLFLOW_TRACKING_URI
+    - python scripts/model_validation.py
+      --model-path models/tuned/best_model.pkl
+      --validation-config configs/validation.yaml
+      --output-path validation_report.json
+  artifacts:
+    paths:
+      - evaluation_results/
+      - validation_report.json
+      - model_performance.json
+    expire_in: 1 month
+  dependencies:
+    - train
+  allow_failure: false
+
+# Model registration in MLflow
+register-model:
+  stage: register
+  image: python:$PYTHON_VERSION
+  script:
+    - pip install -r requirements.txt
+    - python scripts/register_model.py
+      --model-path models/tuned/best_model.pkl
+      --model-name $MODEL_NAME
+      --mlflow-uri $MLFLOW_TRACKING_URI
+      --performance-metric accuracy
+      --threshold 0.85
+    - python scripts/create_model_version.py
+      --model-name $MODEL_NAME
+      --version-tag v$CI_COMMIT_SHORT_SHA
+      --mlflow-uri $MLFLOW_TRACKING_URI
+  artifacts:
+    paths:
+      - model_registry_info.json
+    expire_in: 1 year
+  dependencies:
+    - evaluate
+  only:
+    - main
+
+# Deploy model to staging
+deploy-staging:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Deploying model to staging environment"
+    - kubectl apply -f k8s/staging/model-deployment.yaml
+    - kubectl set image deployment/model-deployment
+      model-server=registry.gitlab.com/$CI_PROJECT_PATH/model-server:$CI_COMMIT_SHORT_SHA
+    - kubectl rollout status deployment/model-deployment -n staging
+    - python scripts/update_endpoint.py
+      --model-name $MODEL_NAME
+      --environment staging
+      --endpoint-config configs/staging_endpoint.yaml
+  environment:
+    name: staging
+    url: https://api-staging.example.com/predict
+  dependencies:
+    - register-model
+  only:
+    - develop
+  when: manual
+
+# Deploy model to production
+deploy-production:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Deploying model to production environment"
+    - kubectl apply -f k8s/production/model-deployment.yaml
+    - kubectl set image deployment/model-deployment
+      model-server=registry.gitlab.com/$CI_PROJECT_PATH/model-server:$CI_COMMIT_SHORT_SHA
+    - kubectl rollout status deployment/model-deployment -n production
+    - python scripts/update_endpoint.py
+      --model-name $MODEL_NAME
+      --environment production
+      --endpoint-config configs/production_endpoint.yaml
+    - python scripts/setup_ab_test.py
+      --model-name $MODEL_NAME
+      --traffic-split 90/10
+      --duration 7d
+  environment:
+    name: production
+    url: https://api.example.com/predict
+  dependencies:
+    - register-model
+  only:
+    - main
+  when: manual
+
+# Model monitoring and drift detection
+monitor:
+  stage: monitor
+  image: python:$PYTHON_VERSION
+  script:
+    - pip install -r requirements.txt
+    - python scripts/data_drift_detection.py
+      --reference-data $DATA_PATH/features/reference_data.csv
+      --current-data $DATA_PATH/features/current_data.csv
+      --output-path drift_reports/
+    - python scripts/model_performance_monitor.py
+      --model-name $MODEL_NAME
+      --mlflow-uri $MLFLOW_TRACKING_URI
+      --alert-threshold 0.05
+    - python scripts/generate_monitoring_dashboard.py
+      --model-name $MODEL_NAME
+      --output-path monitoring_dashboard.html
+  artifacts:
+    paths:
+      - drift_reports/
+      - monitoring_dashboard.html
+      - performance_metrics.json
+    expire_in: 1 month
+  dependencies:
+    - deploy-production
+  only:
+    - main
+  when: always
+
+# Cleanup old artifacts and models
+cleanup:
+  stage: monitor
+  image: python:$PYTHON_VERSION
+  script:
+    - pip install -r requirements.txt
+    - python scripts/cleanup_old_models.py
+      --model-name $MODEL_NAME
+      --mlflow-uri $MLFLOW_TRACKING_URI
+      --keep-versions 5
+    - python scripts/cleanup_artifacts.py
+      --retention-days 30
+      --path $DATA_PATH/
+  dependencies:
+    - monitor
+  only:
+    - main
+  when: always
+  allow_failure: true
+
+# Additional jobs for data quality and feature store
+feature-store-update:
+  stage: preprocess
+  image: python:$PYTHON_VERSION
+  script:
+    - pip install -r requirements.txt
+    - python scripts/update_feature_store.py
+      --data-path $DATA_PATH/features/churn_features.csv
+      --feature-store-config configs/feature_store.yaml
+      --entity-name customer
+  dependencies:
+    - preprocess
+  only:
+    - main
+
+# Model explainability and fairness analysis
+model-explainability:
+  stage: evaluate
+  image: python:$PYTHON_VERSION
+  script:
+    - pip install -r requirements.txt
+    - python scripts/model_explainability.py
+      --model-path models/tuned/best_model.pkl
+      --test-data $DATA_PATH/features/test_data.csv
+      --output-path explainability_reports/
+    - python scripts/fairness_analysis.py
+      --model-path models/tuned/best_model.pkl
+      --sensitive-attributes age gender
+      --output-path fairness_reports/
+  artifacts:
+    paths:
+      - explainability_reports/
+      - fairness_reports/
+    expire_in: 1 month
+  dependencies:
+    - evaluate
+  only:
+    - main
+    - develop`
+            },
+            database: {
+                title: 'Database Migration Pipeline',
+                description: 'Automated database schema migrations with rollback capabilities, validation testing, and multi-environment deployment.',
+                buildTime: '8.2m',
+                successRate: '91%',
+                parallelJobs: '6',
+                deployFreq: '15/day',
+                code: `# Database Migration Pipeline
+stages:
+  - validate
+  - migrate
+  - test
+  - deploy
+
+variables:
+  POSTGRES_VERSION: "13"
+  POSTGRES_DB: "application_db"
+  POSTGRES_USER: "db_user"
+  POSTGRES_PASSWORD: "$DB_PASSWORD"  # From CI/CD variables
+  FLYWAY_VERSION: "8.5.0"
+
+services:
+  - postgres:$POSTGRES_VERSION
+
+# Validate migration scripts
+validate-migrations:
+  stage: validate
+  image: flyway/flyway:$FLYWAY_VERSION
+  script:
+    - flyway validate
+      -url=jdbc:postgresql://postgres:5432/$POSTGRES_DB
+      -user=$POSTGRES_USER
+      -password=$POSTGRES_PASSWORD
+      -locations=filesystem:./migrations
+      -baselineOnMigrate=true
+  artifacts:
+    reports:
+      junit: validation-results.xml
+    paths:
+      - migration-validation.log
+    expire_in: 1 week
+
+# Run migrations on test database
+migrate-test:
+  stage: migrate
+  image: flyway/flyway:$FLYWAY_VERSION
+  script:
+    - echo "Running migrations on test database"
+    - flyway migrate
+      -url=jdbc:postgresql://postgres:5432/test_db
+      -user=$POSTGRES_USER
+      -password=$POSTGRES_PASSWORD
+      -locations=filesystem:./migrations
+      -outOfOrder=false
+      -validateOnMigrate=true
+  artifacts:
+    paths:
+      - migration-report.json
+    expire_in: 1 month
+
+# Test database functionality
+test-database:
+  stage: test
+  image: python:3.9
+  script:
+    - pip install -r requirements.txt
+    - python scripts/test_database_integration.py
+      --db-host=postgres
+      --db-name=test_db
+      --db-user=$POSTGRES_USER
+      --db-password=$POSTGRES_PASSWORD
+    - python scripts/validate_schema.py
+      --expected-schema=schemas/expected_schema.sql
+      --actual-db=test_db
+    - python scripts/performance_test.py
+      --db-connection-string=postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5432/test_db
+  artifacts:
+    reports:
+      junit: database-test-results.xml
+    paths:
+      - performance-test-results.json
+    expire_in: 1 week
+  dependencies:
+    - migrate-test
+
+# Backup production database
+backup-production:
+  stage: deploy
+  image: postgres:$POSTGRES_VERSION
+  script:
+    - echo "Creating production database backup"
+    - pg_dump \\
+      --host=$PROD_DB_HOST \\
+      --username=$PROD_DB_USER \\
+      --dbname=$PROD_DB_NAME \\
+      --format=custom \\
+      --file=backup_$(date +%Y%m%d_%H%M%S).dump
+    - aws s3 cp backup_*.dump s3://database-backups/
+  environment:
+    name: production
+  only:
+    - main
+  when: manual
+
+# Deploy migrations to production
+migrate-production:
+  stage: deploy
+  image: flyway/flyway:$FLYWAY_VERSION
+  script:
+    - echo "Running migrations on production database"
+    - flyway migrate
+      -url=jdbc:postgresql://$PROD_DB_HOST:5432/$PROD_DB_NAME
+      -user=$PROD_DB_USER
+      -password=$PROD_DB_PASSWORD
+      -locations=filesystem:./migrations
+      -outOfOrder=false
+      -validateOnMigrate=true
+      -baselineOnMigrate=true
+    - python scripts/notify_migration_complete.py
+      --environment=production
+      --migration-count=$(flyway info -url=jdbc:postgresql://$PROD_DB_HOST:5432/$PROD_DB_NAME -user=$PROD_DB_USER -password=$PROD_DB_PASSWORD | grep -c Success)
+  environment:
+    name: production
+  only:
+    - main
+  when: manual
+  dependencies:
+    - backup-production
+
+# Rollback job (manual trigger)
+rollback-production:
+  stage: deploy
+  image: flyway/flyway:$FLYWAY_VERSION
+  script:
+    - echo "Rolling back production database"
+    - flyway undo
+      -url=jdbc:postgresql://$PROD_DB_HOST:5432/$PROD_DB_NAME
+      -user=$PROD_DB_USER
+      -password=$PROD_DB_PASSWORD
+      -locations=filesystem:./migrations
+      -target=$ROLLBACK_TARGET_VERSION
+  environment:
+    name: production
+  only:
+    - main
+  when: manual
+  allow_failure: true`
+            },
+            database: {
+                title: 'Database Migration Pipeline',
+                description: 'Automated database schema migrations with rollback capabilities, validation testing, and multi-environment deployment.',
+                buildTime: '8.2m',
+                successRate: '91%',
+                parallelJobs: '6',
+                deployFreq: '15/day',
+                code: `# Database Migration Pipeline
+stages:
+  - validate
+  - migrate
+  - test
+  - deploy
+
+variables:
+  POSTGRES_VERSION: "13"
+  POSTGRES_DB: "application_db"
+  POSTGRES_USER: "db_user"
+  POSTGRES_PASSWORD: "$DB_PASSWORD"  # From CI/CD variables
+  FLYWAY_VERSION: "8.5.0"
+
+services:
+  - postgres:$POSTGRES_VERSION
+
+# Validate migration scripts
+validate-migrations:
+  stage: validate
+  image: flyway/flyway:$FLYWAY_VERSION
+  script:
+    - flyway validate
+      -url=jdbc:postgresql://postgres:5432/$POSTGRES_DB
+      -user=$POSTGRES_USER
+      -password=$POSTGRES_PASSWORD
+      -locations=filesystem:./migrations
+      -baselineOnMigrate=true
+  artifacts:
+    reports:
+      junit: validation-results.xml
+    paths:
+      - migration-validation.log
+    expire_in: 1 week
+
+# Run migrations on test database
+migrate-test:
+  stage: migrate
+  image: flyway/flyway:$FLYWAY_VERSION
+  script:
+    - echo "Running migrations on test database"
+    - flyway migrate
+      -url=jdbc:postgresql://postgres:5432/test_db
+      -user=$POSTGRES_USER
+      -password=$POSTGRES_PASSWORD
+      -locations=filesystem:./migrations
+      -outOfOrder=false
+      -validateOnMigrate=true
+  artifacts:
+    paths:
+      - migration-report.json
+    expire_in: 1 month
+
+# Test database functionality
+test-database:
+  stage: test
+  image: python:3.9
+  script:
+    - pip install -r requirements.txt
+    - python scripts/test_database_integration.py
+      --db-host=postgres
+      --db-name=test_db
+      --db-user=$POSTGRES_USER
+      --db-password=$POSTGRES_PASSWORD
+    - python scripts/validate_schema.py
+      --expected-schema=schemas/expected_schema.sql
+      --actual-db=test_db
+    - python scripts/performance_test.py
+      --db-connection-string=postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5432/test_db
+  artifacts:
+    reports:
+      junit: database-test-results.xml
+    paths:
+      - performance-test-results.json
+    expire_in: 1 week
+  dependencies:
+    - migrate-test
+
+# Backup production database
+backup-production:
+  stage: deploy
+  image: postgres:$POSTGRES_VERSION
+  script:
+    - echo "Creating production database backup"
+    - pg_dump \\
+      --host=$PROD_DB_HOST \\
+      --username=$PROD_DB_USER \\
+      --dbname=$PROD_DB_NAME \\
+      --format=custom \\
+      --file=backup_$(date +%Y%m%d_%H%M%S).dump
+    - aws s3 cp backup_*.dump s3://database-backups/
+  environment:
+    name: production
+  only:
+    - main
+  when: manual
+
+# Deploy migrations to production
+migrate-production:
+  stage: deploy
+  image: flyway/flyway:$FLYWAY_VERSION
+  script:
+    - echo "Running migrations on production database"
+    - flyway migrate
+      -url=jdbc:postgresql://$PROD_DB_HOST:5432/$PROD_DB_NAME
+      -user=$PROD_DB_USER
+      -password=$PROD_DB_PASSWORD
+      -locations=filesystem:./migrations
+      -outOfOrder=false
+      -validateOnMigrate=true
+      -baselineOnMigrate=true
+    - python scripts/notify_migration_complete.py
+      --environment=production
+      --migration-count=$(flyway info -url=jdbc:postgresql://$PROD_DB_HOST:5432/$PROD_DB_NAME -user=$PROD_DB_USER -password=$PROD_DB_PASSWORD | grep -c Success)
+  environment:
+    name: production
+  only:
+    - main
+  when: manual
+  dependencies:
+    - backup-production
+
+# Rollback job (manual trigger)
+rollback-production:
+  stage: deploy
+  image: flyway/flyway:$FLYWAY_VERSION
+  script:
+    - echo "Rolling back production database"
+    - flyway undo
+      -url=jdbc:postgresql://$PROD_DB_HOST:5432/$PROD_DB_NAME
+      -user=$PROD_DB_USER
+      -password=$PROD_DB_PASSWORD
+      -locations=filesystem:./migrations
+      -target=$ROLLBACK_TARGET_VERSION
+  environment:
+    name: production
+  only:
+    - main
+  when: manual
+  allow_failure: true`
+            },
+            monitoring: {
+                title: 'Monitoring & Observability Pipeline',
+                description: 'Complete observability stack with metrics collection, log aggregation, alerting, and dashboard deployment.',
+                buildTime: '15.3m',
+                successRate: '87%',
+                parallelJobs: '12',
+                deployFreq: '12/day',
+                code: `# Monitoring & Observability Pipeline
+stages:
+  - build-tools
+  - deploy-monitoring
+  - configure-alerts
+  - validate
+  - deploy-dashboards
+
+variables:
+  PROMETHEUS_VERSION: "2.40.0"
+  GRAFANA_VERSION: "9.3.0"
+  ELASTIC_VERSION: "8.5.0"
+  JAEGER_VERSION: "1.39.0"
+  ALERTMANAGER_VERSION: "0.25.0"
+
+# Build monitoring tools and exporters
+build-prometheus:
+  stage: build-tools
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - echo "Building custom Prometheus exporters"
+    - docker build -t prometheus-custom-exporter:$CI_COMMIT_SHA ./exporters/custom
+    - docker build -t prometheus-node-exporter:$CI_COMMIT_SHA ./exporters/node
+    - docker push registry.gitlab.com/$CI_PROJECT_PATH/prometheus-custom-exporter:$CI_COMMIT_SHA
+    - docker push registry.gitlab.com/$CI_PROJECT_PATH/prometheus-node-exporter:$CI_COMMIT_SHA
+  artifacts:
+    paths:
+      - exporter-configs/
+    expire_in: 1 week
+
+# Deploy Prometheus and metrics collection
+deploy-prometheus:
+  stage: deploy-monitoring
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Deploying Prometheus monitoring stack"
+    - kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+    - helm upgrade --install prometheus prometheus-community/kube-prometheus-stack
+      --namespace monitoring
+      --version $PROMETHEUS_VERSION
+      --values configs/prometheus-values.yaml
+      --set grafana.enabled=false
+    - kubectl apply -f k8s/prometheus-exporters/
+    - kubectl rollout status deployment/prometheus-server -n monitoring
+  environment:
+    name: monitoring
+    url: https://prometheus.example.com
+  artifacts:
+    paths:
+      - prometheus-deployment-info.json
+    expire_in: 1 month
+
+# Deploy Grafana for visualization
+deploy-grafana:
+  stage: deploy-monitoring
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Deploying Grafana dashboard server"
+    - helm upgrade --install grafana grafana/grafana
+      --namespace monitoring
+      --version $GRAFANA_VERSION
+      --values configs/grafana-values.yaml
+      --set adminPassword=$GRAFANA_ADMIN_PASSWORD
+    - kubectl apply -f k8s/grafana-datasources/
+    - kubectl rollout status deployment/grafana -n monitoring
+    - python scripts/configure_grafana.py
+      --grafana-url=https://grafana.example.com
+      --admin-password=$GRAFANA_ADMIN_PASSWORD
+      --datasource-url=http://prometheus-server:9090
+  environment:
+    name: monitoring
+    url: https://grafana.example.com
+  dependencies:
+    - deploy-prometheus
+
+# Deploy ELK stack for log aggregation
+deploy-elk:
+  stage: deploy-monitoring
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Deploying ELK stack for log management"
+    - kubectl create namespace logging --dry-run=client -o yaml | kubectl apply -f -
+    - helm upgrade --install elasticsearch elastic/elasticsearch
+      --namespace logging
+      --version $ELASTIC_VERSION
+      --values configs/elasticsearch-values.yaml
+    - helm upgrade --install logstash elastic/logstash
+      --namespace logging
+      --values configs/logstash-values.yaml
+    - helm upgrade --install kibana elastic/kibana
+      --namespace logging
+      --values configs/kibana-values.yaml
+    - kubectl apply -f k8s/filebeat/
+  environment:
+    name: logging
+    url: https://kibana.example.com
+
+# Deploy Jaeger for distributed tracing
+deploy-jaeger:
+  stage: deploy-monitoring
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Deploying Jaeger for distributed tracing"
+    - helm upgrade --install jaeger jaegertracing/jaeger
+      --namespace monitoring
+      --version $JAEGER_VERSION
+      --values configs/jaeger-values.yaml
+    - kubectl apply -f k8s/jaeger-agents/
+  environment:
+    name: monitoring
+    url: https://jaeger.example.com
+
+# Configure alerting rules
+configure-alerts:
+  stage: configure-alerts
+  image: python:3.9
+  script:
+    - pip install -r requirements.txt
+    - python scripts/generate_alert_rules.py
+      --prometheus-url=http://prometheus-server:9090
+      --config-file=configs/alert-rules.yaml
+      --output-path=alert-rules-generated.yml
+    - kubectl create configmap prometheus-alert-rules
+      --from-file=alert-rules-generated.yml
+      --namespace monitoring
+      --dry-run=client -o yaml | kubectl apply -f -
+    - python scripts/deploy_alertmanager.py
+      --alertmanager-version=$ALERTMANAGER_VERSION
+      --config-file=configs/alertmanager.yaml
+      --slack-webhook-url=$SLACK_WEBHOOK_URL
+  dependencies:
+    - deploy-prometheus
+
+# Validate monitoring stack
+validate-monitoring:
+  stage: validate
+  image: python:3.9
+  script:
+    - pip install -r requirements.txt
+    - python scripts/validate_monitoring_stack.py
+      --prometheus-url=https://prometheus.example.com
+      --grafana-url=https://grafana.example.com
+      --alertmanager-url=https://alertmanager.example.com
+    - python scripts/test_alerting.py
+      --prometheus-url=https://prometheus.example.com
+      --test-alerts-config=configs/test-alerts.yaml
+    - python scripts/validate_dashboards.py
+      --grafana-url=https://grafana.example.com
+      --dashboards-config=configs/dashboards-to-validate.yaml
+  artifacts:
+    reports:
+      junit: validation-results.xml
+    paths:
+      - monitoring-validation-report.json
+    expire_in: 1 week
+  dependencies:
+    - deploy-prometheus
+    - deploy-grafana
+    - configure-alerts
+
+# Deploy custom dashboards
+deploy-dashboards:
+  stage: deploy-dashboards
+  image: python:3.9
+  script:
+    - pip install -r requirements.txt
+    - python scripts/deploy_dashboards.py
+      --grafana-url=https://grafana.example.com
+      --admin-password=$GRAFANA_ADMIN_PASSWORD
+      --dashboards-folder=./dashboards/
+    - python scripts/setup_slo_dashboards.py
+      --grafana-url=https://grafana.example.com
+      --slo-configs=configs/service-level-objectives.yaml
+    - python scripts/configure_annotations.py
+      --grafana-url=https://grafana.example.com
+      --datasources-config=configs/annotation-sources.yaml
+  dependencies:
+    - validate-monitoring
+    - deploy-grafana
+
+# Performance baseline testing
+performance-baseline:
+  stage: validate
+  image: python:3.9
+  script:
+    - pip install -r requirements.txt
+    - python scripts/run_performance_tests.py
+      --target-url=https://application.example.com
+      --test-config=configs/performance-tests.yaml
+      --prometheus-url=https://prometheus.example.com
+    - python scripts/baseline_comparison.py
+      --current-results=performance-test-results.json
+      --baseline-file=baselines/performance-baseline.json
+      --threshold=5%
+  artifacts:
+    paths:
+      - performance-test-results.json
+      - baseline-comparison-report.html
+    expire_in: 1 month
+  dependencies:
+    - deploy-prometheus
+
+# Monitoring health check (runs periodically)
+health-check:
+  stage: validate
+  image: python:3.9
+  script:
+    - pip install -r requirements.txt
+    - python scripts/monitoring_health_check.py
+      --prometheus-url=https://prometheus.example.com
+      --grafana-url=https://grafana.example.com
+      --alertmanager-url=https://alertmanager.example.com
+      --kibana-url=https://kibana.example.com
+      --jaeger-url=https://jaeger.example.com
+    - python scripts/generate_health_report.py
+      --health-check-results=health-check-results.json
+      --output-format=html,json
+  artifacts:
+    paths:
+      - health-check-results.json
+      - health-report.html
+    expire_in: 1 week
+  only:
+    - main
+  when: always
+  allow_failure: true`
+            },
+            fullstack: {
+                title: 'Full Stack Application',
+                description: 'Complete CI/CD pipeline for full stack applications with frontend, backend, database, and deployment to multiple environments.',
+                buildTime: '6.8m',
+                successRate: '89%',
+                parallelJobs: '14',
+                deployFreq: '32/day',
+                code: `# Full Stack Application CI/CD Pipeline
+stages:
+  - build-frontend
+  - build-backend
+  - test
+  - security
+  - deploy
+
+variables:
+  NODE_VERSION: "18"
+  PYTHON_VERSION: "3.9"
+  DOCKER_REGISTRY: "registry.gitlab.com"
+  FRONTEND_IMAGE: "$DOCKER_REGISTRY/$CI_PROJECT_PATH/frontend"
+  BACKEND_IMAGE: "$DOCKER_REGISTRY/$CI_PROJECT_PATH/backend"
+
+# Build frontend application
+build-frontend:
+  stage: build-frontend
+  image: node:$NODE_VERSION
+  script:
+    - cd frontend
+    - npm ci
+    - npm run build
+    - npm run export
+  artifacts:
+    paths:
+      - frontend/out/
+      - frontend/.next/
+    expire_in: 1 hour
+
+# Build backend application  
+build-backend:
+  stage: build-backend
+  image: python:$PYTHON_VERSION
+  script:
+    - cd backend
+    - pip install -r requirements.txt
+    - python -m build
+    - docker build -t $BACKEND_IMAGE:$CI_COMMIT_SHA .
+    - docker push $BACKEND_IMAGE:$CI_COMMIT_SHA
+  artifacts:
+    paths:
+      - backend/dist/
+    expire_in: 1 hour
+
+# Test full stack application
+test-fullstack:
+  stage: test
+  parallel:
+    matrix:
+      - TEST_TYPE: frontend
+        IMAGE: node:$NODE_VERSION
+      - TEST_TYPE: backend
+        IMAGE: python:$PYTHON_VERSION
+  image: $IMAGE
+  script:
+    - cd $TEST_TYPE
+    - |
+      if [ "$TEST_TYPE" = "frontend" ]; then
+        npm ci
+        npm run test:ci
+        npm run lint
+      else
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+        pytest --cov=myapp --cov-report=xml
+      fi
+  artifacts:
+    reports:
+      junit: "*/test-results.xml"
+      coverage_report:
+        coverage_format: cobertura
+        path: "*/coverage.xml"
+
+# Security scanning for both frontend and backend
+security-fullstack:
+  stage: security
+  parallel:
+    matrix:
+      - SCAN_TYPE: frontend
+        IMAGE: node:$NODE_VERSION
+      - SCAN_TYPE: backend
+        IMAGE: python:$PYTHON_VERSION
+  image: $IMAGE
+  script:
+    - cd $SCAN_TYPE
+    - |
+      if [ "$SCAN_TYPE" = "frontend" ]; then
+        npm audit --audit-level moderate
+      else
+        pip install safety
+        safety check
+      fi
+  allow_failure: true
+
+# Deploy to staging environment
+deploy-staging:
+  stage: deploy
+  image: bitnami/helm:latest
+  script:
+    - echo "Deploying full stack application to staging"
+    - helm dependency update ./chart
+    - helm upgrade --install fullstack-staging ./chart 
+      --set frontend.image.tag=$CI_COMMIT_SHA
+      --set backend.image.tag=$CI_COMMIT_SHA
+      --set environment=staging
+      --wait
+  environment:
+    name: staging
+    url: https://staging.example.com
+  dependencies:
+    - test-fullstack
+  only:
+    - develop
+
+# Deploy to production environment
+deploy-production:
+  stage: deploy
+  image: bitnami/helm:latest
+  script:
+    - echo "Deploying full stack application to production"
+    - helm dependency update ./chart
+    - helm upgrade --install fullstack-prod ./chart 
+      --set frontend.image.tag=$CI_COMMIT_SHA
+      --set backend.image.tag=$CI_COMMIT_SHA
+      --set environment=production
+      --wait
+  environment:
+    name: production
+    url: https://example.com
+  dependencies:
+    - test-fullstack
+  only:
+    - main
+  when: manual`
+            }
+        };
+
+        let currentExample = null;
+        let performanceChart = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            setupFilters();
+            setupExampleCards();
+            initializeAnimations();
+        });
+
+        function setupFilters() {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Update active filter
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Filter examples
+                    const filter = btn.dataset.filter;
+                    filterExamples(filter);
+                });
+            });
+        }
+
+        function filterExamples(category) {
+            const exampleCards = document.querySelectorAll('.example-card');
+            
+            exampleCards.forEach(card => {
+                if (category === 'all' || card.dataset.category === category) {
+                    card.style.display = 'block';
+                    anime({
+                        targets: card,
+                        opacity: [0, 1],
+                        scale: [0.9, 1],
+                        duration: 300,
+                        easing: 'easeOutQuad'
+                    });
+                } else {
+                    anime({
+                        targets: card,
+                        opacity: [1, 0],
+                        scale: [1, 0.9],
+                        duration: 200,
+                        easing: 'easeInQuad',
+                        complete: () => {
+                            card.style.display = 'none';
+                        }
+                    });
+                }
+            });
+        }
+
+        function setupExampleCards() {
+            const exampleCards = document.querySelectorAll('.example-card');
+            exampleCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const exampleType = card.dataset.example;
+                    showExampleDetail(exampleType);
+                });
+            });
+        }
+
+        function showExampleDetail(exampleType) {
+            currentExample = exampleType;
+            const example = examples[exampleType];
+            
+            if (!example) return;
+
+            // Update content
+            document.getElementById('example-title').textContent = example.title;
+            document.getElementById('example-description').textContent = example.description;
+            document.getElementById('build-time').textContent = example.buildTime;
+            document.getElementById('success-rate').textContent = example.successRate;
+            document.getElementById('parallel-jobs').textContent = example.parallelJobs;
+            document.getElementById('deploy-freq').textContent = example.deployFreq;
+            document.getElementById('example-code').textContent = example.code;
+
+            // Show detail section
+            document.getElementById('examples').classList.add('hidden');
+            document.getElementById('example-detail').classList.remove('hidden');
+
+            // Initialize performance chart
+            setTimeout(() => {
+                initializePerformanceChart();
+            }, 100);
+
+            // Animate transition
+            anime({
+                targets: '#example-detail',
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: 500,
+                easing: 'easeOutQuad'
+            });
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function closeExample() {
+            document.getElementById('example-detail').classList.add('hidden');
+            document.getElementById('examples').classList.remove('hidden');
+            
+            // Cleanup chart
+            if (performanceChart) {
+                performanceChart.dispose();
+                performanceChart = null;
+            }
+        }
+
+        function initializePerformanceChart() {
+            const chartDom = document.getElementById('performance-chart');
+            if (!chartDom) return;
+
+            performanceChart = echarts.init(chartDom);
+            
+            const option = {
+                backgroundColor: 'transparent',
+                textStyle: {
+                    color: '#e2e8f0'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: '#374151',
+                    borderColor: '#06b6d4',
+                    textStyle: {
+                        color: '#ffffff'
+                    }
+                },
+                legend: {
+                    data: ['Build Time', 'Success Rate'],
+                    textStyle: {
+                        color: '#e2e8f0'
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#4b5563'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#94a3b8'
+                    }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: 'Time (minutes)',
+                        axisLine: {
+                            lineStyle: {
+                                color: '#4b5563'
+                            }
+                        },
+                        axisLabel: {
+                            color: '#94a3b8'
+                        }
+                    },
+                    {
+                        type: 'value',
+                        name: 'Success Rate (%)',
+                        max: 100,
+                        axisLine: {
+                            lineStyle: {
+                                color: '#4b5563'
+                            }
+                        },
+                        axisLabel: {
+                            color: '#94a3b8'
+                        }
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Build Time',
+                        type: 'line',
+                        data: [3.2, 3.1, 3.5, 3.2, 3.0, 3.3, 3.2],
+                        itemStyle: {
+                            color: '#06b6d4'
+                        },
+                        lineStyle: {
+                            color: '#06b6d4'
+                        }
+                    },
+                    {
+                        name: 'Success Rate',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: [95, 97, 94, 95, 96, 95, 95],
+                        itemStyle: {
+                            color: '#10b981'
+                        },
+                        lineStyle: {
+                            color: '#10b981'
+                        }
+                    }
+                ]
+            };
+
+            performanceChart.setOption(option);
+        }
+
+        function copyExampleCode() {
+            const codeElement = document.getElementById('example-code');
+            const code = codeElement.textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                showNotification('Configuration copied to clipboard!', 'success');
+            }).catch(() => {
+                showNotification('Failed to copy configuration', 'error');
+            });
+        }
+
+        function simulateExample() {
+            if (!currentExample) return;
+
+            showNotification('Pipeline simulation started...', 'info');
+            
+            const stages = document.querySelectorAll('#pipeline-visualization .flex.items-center');
+            stages.forEach((stage, index) => {
+                setTimeout(() => {
+                    stage.style.background = 'rgba(16, 185, 129, 0.2)';
+                    stage.style.borderLeft = '4px solid #10b981';
+                    
+                    setTimeout(() => {
+                        stage.style.background = 'rgba(55, 65, 81, 0.7)';
+                        stage.style.borderLeft = 'none';
+                    }, 1000);
+                }, index * 1500);
+            });
+
+            setTimeout(() => {
+                showNotification('Pipeline simulation completed successfully!', 'success');
+            }, stages.length * 1500 + 1000);
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform translate-x-full transition-transform duration-300`;
+            
+            const colors = {
+                success: 'bg-green-600',
+                error: 'bg-red-600',
+                warning: 'bg-yellow-600',
+                info: 'bg-blue-600'
+            };
+
+            notification.classList.add(colors[type]);
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <span class="text-white">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 5000);
+        }
+
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function initializeAnimations() {
+            // Animate example cards on load
+            anime({
+                targets: '.example-card',
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: 600,
+                delay: (el, i) => 100 * i,
+                easing: 'easeOutQuad'
+            });
+        }
+
+        // Handle window resize for chart
+        window.addEventListener('resize', () => {
+            if (performanceChart) {
+                performanceChart.resize();
+            }
+        });
+    </script>
+</body>
+</html>
